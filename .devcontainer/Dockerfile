@@ -8,6 +8,5 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
 # [Optional] Uncomment this section to install additional OS packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends autoconf automake libtool curl \
-    make g++ llvm clang lld libc6-dev-i386 binaryen unzip wasi-libc \
+    make g++ binaryen unzip libxml2 \
     bzip2 lbzip2 xz-utils nodejs
-
