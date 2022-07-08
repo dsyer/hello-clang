@@ -7,5 +7,6 @@ tmp/
 
 *.wasm
 *.wat
+*.o
 
 test

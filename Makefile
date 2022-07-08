@@ -1,20 +1,24 @@
-COMPILE_FLAGS = -Wall \
-		--target=wasm32 -I /usr/include/wasm32-wasi \
-		-Os
 OBJ = strlen.o
 
-CLANG = clang
-LD = wasm-ld
+WASI_VERSION = 16
+WASI_VERSION_FULL := $(WASI_VERSION).0
 
-%.o: %.c  Makefile
-	$(CLANG) \
-		-c \
+WASI_SDK_PATH := tmp/wasi-sdk-$(WASI_VERSION_FULL)
+CLANG := $(WASI_SDK_PATH)/bin/clang
+LD := $(WASI_SDK_PATH)/bin/wasm-ld
+
+COMPILE_FLAGS := -Os
+
+%.o: %.c  Makefile $(WASI_SDK_PATH)
+	$(CLANG) --sysroot=${WASI_SDK_PATH}/share/wasi-sysroot \
+		-v -c \
 		$(COMPILE_FLAGS) \
 		-o $@ \
 		$<
 
 strlen.wasm: $(OBJ)
-	$(LD) -o strlen.wasm --no-entry --export=string_length \
+	$(LD) -L ${WASI_SDK_PATH}/share/wasi-sysroot/lib/wasm32-wasi \
+		-o strlen.wasm --no-entry --export=string_length \
 		--strip-all \
 		--export-dynamic \
 		--allow-undefined \
@@ -23,11 +27,15 @@ strlen.wasm: $(OBJ)
 		--lto-O3 \
 		-O3 \
 		--gc-sections \
-		-L /usr/lib/wasm32-wasi -lc \
+		-lc \
 		$(OBJ)
 
 test: strlen.wasm Makefile
 	npm test
+
+$(WASI_SDK_PATH): 
+	mkdir -p tmp
+	cd tmp && curl -L https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_VERSION}/wasi-sdk-${WASI_VERSION_FULL}-linux.tar.gz | tar -xzf -
 
 clean:
 	rm -f strlen.wasm strlen.o
